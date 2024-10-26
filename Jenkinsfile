@@ -34,13 +34,54 @@ pipeline {
                 sh 'mvn verify'
             }
         }
-       
+        stage('Snyk Security Scan') {
+            steps {
+                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
+                    script {
+                        // Install Snyk if it's not already installed
+                        sh '''
+                            if ! command -v snyk &> /dev/null
+                            then
+                                npm install -g snyk
+                            fi
+                        '''
+                        // Authenticate Snyk using the API token
+                        sh 'snyk auth $SNYK_TOKEN'
+                        
+                        // Run the Snyk code vulnerability test
+                        echo "Running Snyk Code Vulnerability Scan..."
+                        sh 'snyk test --all-projects'
+
+                        // Run the Snyk Dependency Check
+                        echo "Running Snyk Dependency Check..."
+                        sh 'snyk test'
+
+                        // Optionally, monitor the project for ongoing vulnerability tracking
+                        echo "Monitoring the project with Snyk..."
+                        sh 'snyk monitor'
+                    }
+                }
+            }
+        }
         stage('Docker Build') {
             steps {
                 sh 'docker build --no-cache -t feramin108/mavenapp .'
             }
         }
-      
+        stage('Docker Scan') {
+            steps {
+                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
+                    script {
+                        // Authenticate Snyk for Docker image scanning
+                        sh 'snyk auth $SNYK_TOKEN'
+                        
+                        // Scan the built Docker image for vulnerabilities
+                        echo "Scanning Docker image for vulnerabilities..."
+                        sh 'snyk container test feramin108/mavenapp'
+                    }
+                }
+            }
+        }
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
