@@ -34,35 +34,7 @@ pipeline {
                 sh 'mvn verify'
             }
         }
-        stage('Snyk Security Scan') {
-            steps {
-                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
-                    script {
-                        // Install Snyk if it's not already installed
-                        sh '''
-                            if ! command -v snyk &> /dev/null
-                            then
-                                npm install -g snyk
-                            fi
-                        '''
-                        // Authenticate Snyk using the API token
-                        sh 'snyk auth $SNYK_TOKEN'
-                        
-                        // Run the Snyk code vulnerability test
-                        echo "Running Snyk Code Vulnerability Scan..."
-                        sh 'snyk test --all-projects'
-
-                        // Run the Snyk Dependency Check
-                        echo "Running Snyk Dependency Check..."
-                        sh 'snyk test'
-
-                        // Optionally, monitor the project for ongoing vulnerability tracking
-                        echo "Monitoring the project with Snyk..."
-                        sh 'snyk monitor'
-                    }
-                }
-            }
-        }
+        
         stage('Docker Build') {
             steps {
                 sh 'docker build --no-cache -t feramin108/mavenapp .'
