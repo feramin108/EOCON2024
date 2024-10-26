@@ -39,6 +39,9 @@ public class FileUploadController {
 			@RequestParam("file") MultipartFile file) {
 		
 		System.out.println("Called the upload file :::" );
+		if (name.contains("..") || name.contains("/") || name.contains("\\")) {
+			throw new IllegalArgumentException("Invalid file name");
+		}
 		if (!file.isEmpty()) {
 			try {
 				byte[] bytes = file.getBytes();
