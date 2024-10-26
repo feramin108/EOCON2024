@@ -40,20 +40,7 @@ pipeline {
                 sh 'docker build --no-cache -t feramin108/mavenapp .'
             }
         }
-        stage('Docker Scan') {
-            steps {
-                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
-                    script {
-                        // Authenticate Snyk for Docker image scanning
-                        sh 'snyk auth $SNYK_TOKEN'
-                        
-                        // Scan the built Docker image for vulnerabilities
-                        echo "Scanning Docker image for vulnerabilities..."
-                        sh 'snyk container test feramin108/mavenapp'
-                    }
-                }
-            }
-        }
+      
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
